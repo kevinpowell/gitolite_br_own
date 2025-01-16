@@ -1,0 +1,9 @@
+#!/bin/sh
+
+#this should run after the git command is done
+# BR_CLEAN may contain a command we should run
+
+if [ -x $GL_REPO_BASE/$GL_REPO.git/br_clean.sh ]; then
+    $GL_REPO_BASE/$GL_REPO.git/br_clean.sh
+    rm -f $GL_REPO_BASE/$GL_REPO.git/br_clean.sh
+fi

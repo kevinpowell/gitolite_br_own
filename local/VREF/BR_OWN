@@ -20,13 +20,15 @@
 #   "VREF/BR_OWN/not-owner".
 
 # Check if at least 8 arguments are provided
-if [ "$#" -lt 8 ]; then
-    echo "Usage: $0 arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8 [additional args...]"
+if [ "$#" -lt 7 ]; then
+    echo "Usage: $0 arg1 arg2 arg3 arg4 arg5 arg6 arg7 [additional args...]"
     exit 1
 fi
 
 # Assign the first argument to a variable
 arg1="$1"
+
+echo "Debug BR_OWN: $arg1 $GL_REPO_BASE/$GL_REPO.git/br_own.dat"
 
 # Check if arg1 exists in br_own.dat
 if ! grep -q "^[^:]*:$arg1$" $GL_REPO_BASE/$GL_REPO.git/br_own.dat; then
@@ -36,7 +38,9 @@ fi
 
 # Check if the line containing arg1 also contains $GL_USER
 if grep -q "^$GL_USER:$arg1$" $GL_REPO_BASE/$GL_REPO.git/br_own.dat; then
+    echo "DEBUG owner"
     echo "VREF/BR_OWN/owner"
 else
+    echo "DEBUG not-owner"
     echo "VREF/BR_OWN/not-owner"
 fi

@@ -9,9 +9,9 @@
 # also take care of branches that were deleted and
 # subsequently re-created by someone else. If arg-8 is all zeros, it's a deletion.
 
-# Check if exactly 8 arguments are provided
-if [ "$#" -ne 8 ]; then
-    echo "Usage: $0 arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8"
+# Check if enough arguments are provided
+if [ "$#" -lt 6 ]; then
+    echo "Usage: $0 arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8 (num args was $#)"
     exit 1
 fi
 
@@ -21,6 +21,8 @@ arg6="$6"
 arg7="$7"
 arg8="$8"
 
+echo "DEBUG trigger: $arg5 $arg6"
+
 # Check if arg6 does not contain the word "DENIED" and arg7 is all zeros
 if ! echo "$arg6" | grep -q "DENIED" && [ "$arg7" = "0000000000000000000000000000000000000000" ]; then
     # Append $GL_USER, a colon, and arg5 to br_own.dat
@@ -28,7 +30,17 @@ if ! echo "$arg6" | grep -q "DENIED" && [ "$arg7" = "000000000000000000000000000
 fi
 
 # Check if arg8 is all zeros
-if [ "$arg8" = "0000000000000000000000000000000000000000" ]; then
-    # Delete lines containing the value of arg5 from br_own.dat
-    sed -i "/$arg5/d" $GL_REPO_BASE/$GL_REPO.git/br_own.dat
+if ! echo "$arg6" | grep -q "DENIED" && [ "$#" -gt 7 ] && [ "$arg8" = "0000000000000000000000000000000000000000" ]; then
+   echo "DEBUG trigger: $arg8"
+   # arrange to delete lines containing the value of arg5 from br_own.dat
+   echo "sed -i \"\\|$arg5|d\" $GL_REPO_BASE/$GL_REPO.git/br_own.dat" > br_clean.sh
+   chmod u+x br_clean.sh
 fi
+
+#now this is getting really ugly.  A VREF may later deny a branch delete but it will be a different
+# invocation of the trigger.  So, if we see a VREF DENIED then don't clean the owner file
+if [ "$#" -eq 6 ] && echo "$arg6" | grep -q "DENIED"; then
+    echo "DEBUG trigger: denied! -- no clean for you"
+    rm -f br_clean.sh
+fi
+
