@@ -1,0 +1,42 @@
+#!/bin/sh
+
+# a VREF that reads the special file $GL_REPO_BASE/$GL_REPO.git/br_own.dat
+# on each access to a branch, and allows/disallows it. Say you call this VREF
+# "BR_OWN" (for "branch owner"); here's a sample of what the ruleset may look
+# like:
+#
+# RW+D VREF/BR_OWN/owner = @all
+# RW VREF/BR_OWN/not-owner = @all
+# - VREF/BR_OWN/not-owner = @all
+#
+# (only branch owners can force push or delete the branch; the rest
+# can do normal push but that's all)
+#
+# The "BR_OWN" VREF should do this:
+#   (see argument list in http://gitolite.com/gitolite/vref.html)
+#   look for arg-1 in the special file. If it does not exist, exit without
+#   printing anything. If it exists, and the username recorded against
+#   it is the same as $GL_USER, print "VREF/BR_OWN/owner", otherwise print
+#   "VREF/BR_OWN/not-owner".
+
+# Check if at least 8 arguments are provided
+if [ "$#" -lt 8 ]; then
+    echo "Usage: $0 arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8 [additional args...]"
+    exit 1
+fi
+
+# Assign the first argument to a variable
+arg1="$1"
+
+# Check if arg1 exists in br_own.dat
+if ! grep -q "^[^:]*:$arg1$" $GL_REPO_BASE/$GL_REPO.git/br_own.dat; then
+    # Exit silently if arg1 is not found
+    exit 0
+fi
+
+# Check if the line containing arg1 also contains $GL_USER
+if grep -q "^$GL_USER:$arg1$" $GL_REPO_BASE/$GL_REPO.git/br_own.dat; then
+    echo "VREF/BR_OWN/owner"
+else
+    echo "VREF/BR_OWN/not-owner"
+fi

@@ -1,0 +1,34 @@
+#!/bin/sh
+
+# ACCESS_2 trigger that records a branch creation in the special file
+# $GL_REPO_BASE/$GL_REPO.git/br_own.dat (in the repo directory).
+# See argument list in http://gitolite.com/gitolite/triggers.html; if arg-6 does not
+# contain the word DENIED, and arg-7 is all zeros, then record
+# $GL_USER as owner of arg-5, in the file $GL_REPO_BASE/$GL_REPO.git/br_own.dat
+#
+# also take care of branches that were deleted and
+# subsequently re-created by someone else. If arg-8 is all zeros, it's a deletion.
+
+# Check if exactly 8 arguments are provided
+if [ "$#" -ne 8 ]; then
+    echo "Usage: $0 arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8"
+    exit 1
+fi
+
+# Assign arguments to variables for clarity
+arg5="$5"
+arg6="$6"
+arg7="$7"
+arg8="$8"
+
+# Check if arg6 does not contain the word "DENIED" and arg7 is all zeros
+if ! echo "$arg6" | grep -q "DENIED" && [ "$arg7" = "0000000000000000000000000000000000000000" ]; then
+    # Append $GL_USER, a colon, and arg5 to br_own.dat
+    echo "$GL_USER:$arg5" >> $GL_REPO_BASE/$GL_REPO.git/br_own.dat
+fi
+
+# Check if arg8 is all zeros
+if [ "$arg8" = "0000000000000000000000000000000000000000" ]; then
+    # Delete lines containing the value of arg5 from br_own.dat
+    sed -i "/$arg5/d" $GL_REPO_BASE/$GL_REPO.git/br_own.dat
+fi
